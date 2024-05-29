@@ -37,7 +37,7 @@ Feel free to explore this repository and start building a robust and responsive 
 ## Installation
 
 * Install [Composer](https://getcomposer.org/download)
-* Clone the repository: `git clone https://github.com/ruswan/laravel_helpdesk.git`
+* Clone the repository: `git clone https://github.com/apriansyahrs/cs_helpdesk.git`
 * Install PHP dependencies: `composer install`
 * Setup configuration: `cp .env.example .env`
 * Generate application key: `php artisan key:generate`
@@ -51,16 +51,16 @@ Feel free to explore this repository and start building a robust and responsive 
 
 ## Dummy Account
 ### Super Admin
-> - Email: superadmin@example.com
+> - Email: superadmin@cs.com
 > - Password: password
 ### Admin Unit
-> - Email: adminunit@example.com
+> - Email: adminunit@cs.com
 > - Password: password
 ### Staff Unit
-> - Email: staffunit@example.com
+> - Email: staffunit@cs.com
 > - Password: password
 ### General User
-> - Email: user@example.com
+> - Email: user@cs.com
 > - Password: password
 
 ## Super Admin Preview
