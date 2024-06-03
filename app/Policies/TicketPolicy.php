@@ -49,7 +49,12 @@ class TicketPolicy
      */
     public function update(User $user, Ticket $ticket): bool
     {
-        return $this->view($user, $ticket);
+        if ($ticket->ticket_statuses_id == TicketStatus::RESOLVED || $ticket->ticket_statuses_id == TicketStatus::CLOSED) {
+            return false;
+        } else {
+            return $this->view($user, $ticket);
+        }
+
     }
 
     /**

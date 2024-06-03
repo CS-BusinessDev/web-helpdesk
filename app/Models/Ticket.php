@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Class Ticket.
@@ -63,6 +64,9 @@ class Ticket extends Model
         'approved_at',
         'solved_at',
     ];
+
+    // Preventif error in migration
+    public static $isSeeding = false;
 
     /**
      * Get the priority that owns the Ticket.
@@ -132,5 +136,61 @@ class Ticket extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class, 'tiket_id');
+    }
+
+        /**
+     * Get the ticketHistories that owns the Ticket.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function ticketHistories()
+    {
+        return $this->hasMany(TicketHistory::class, 'ticket_id');
+    }
+
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Menambahkan event listener untuk event 'saving' pada model
+        static::saving(function ($ticket) {
+            // Memeriksa apakah 'ticket_statuses_id' berubah
+            if ($ticket->isDirty('ticket_statuses_id')) {
+                // Jika 'ticket_statuses_id' berubah dan tidak sama dengan 1, serta 'approved_at' masih null, atur 'approved_at' dengan waktu saat ini
+                if ($ticket->ticket_statuses_id != 1 && is_null($ticket->approved_at)) {
+                    $ticket->approved_at = Carbon::now();
+                }
+
+                // Jika 'ticket_statuses_id' bernilai 7 atau 8, atur 'solved_at' dengan waktu saat ini
+                if ($ticket->ticket_statuses_id == 7 || $ticket->ticket_statuses_id == 8) {
+                    $ticket->solved_at = Carbon::now();
+                }
+            }
+        });
+
+        // Menambahkan event listener untuk event 'created' pada model
+        static::created(function ($ticket) {
+            if (self::$isSeeding) {
+                return;
+            }
+
+            TicketHistory::create([
+                'ticket_id' => $ticket->id,
+                'ticket_statuses_id' => $ticket->ticket_statuses_id,
+                'user_id' => Auth::id(),
+                'created_at' => now(),
+            ]);
+        });
+
+        // Menambahkan event listener untuk event 'updated' pada model
+        static::updated(function ($ticket) {
+            TicketHistory::create([
+                'ticket_id' => $ticket->id,
+                'ticket_statuses_id' => $ticket->ticket_statuses_id,
+                'user_id' => Auth::id(),
+                'created_at' => now(),
+            ]);
+        });
     }
 }

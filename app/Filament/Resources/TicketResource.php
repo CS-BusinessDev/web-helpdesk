@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TicketResource\Pages;
 use App\Filament\Resources\TicketResource\RelationManagers\CommentsRelationManager;
+use App\Filament\Resources\TicketResource\RelationManagers\TicketHistoriesRelationManager;
 use App\Models\Priority;
 use App\Models\ProblemCategory;
 use App\Models\Ticket;
@@ -155,18 +156,33 @@ class TicketResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->translateLabel()
                     ->searchable(),
+                Tables\Columns\TextColumn::make('owner.name')
+                    ->translateLabel()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('problemCategory.name')
+                    ->searchable()
+                    ->label(__('Problem Category'))
+                    ->toggleable(),
+                Tables\Columns\BadgeColumn::make('ticketStatus.name')
+                    ->label(__('Status'))
+                    ->sortable()
+                    ->colors([
+                        'secondary' => static fn ($state): bool => $state === 'Open',
+                        'warning' => static fn ($state): bool => $state === 'Assigned',
+                        'success' => static fn ($state): bool => $state === 'Resolved',
+                        'warning' => static fn ($state): bool => $state === 'Closed',
+                    ])
+                    ->icons([
+                        'heroicon-o-sparkles' => static fn ($state): bool => $state === 'Open',
+                        'heroicon-o-paper-airplane' => static fn ($state): bool => $state === 'Assigned',
+                        'heroicon-o-check' => static fn ($state): bool => $state === 'Resolved',
+                        'heroicon-o-x' => static fn ($state): bool => $state === 'Closed',
+                    ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->translateLabel()
                     ->sortable()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('problemCategory.name')
-                    ->searchable()
-                    ->label(__('Problem Category'))
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('ticketStatus.name')
-                    ->label(__('Status'))
-                    ->sortable(),
             ])
             ->filters([
                 Tables\Filters\TrashedFilter::make(),
@@ -187,6 +203,7 @@ class TicketResource extends Resource
     {
         return [
             CommentsRelationManager::class,
+            TicketHistoriesRelationManager::class,
         ];
     }
 

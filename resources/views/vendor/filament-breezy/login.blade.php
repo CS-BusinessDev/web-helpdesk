@@ -24,7 +24,7 @@
         {{ __('filament::login.buttons.submit.label') }}
     </x-filament::button>
 
-    <x-filament-socialite::buttons />
+    <x-filament-socialite::buttons/>
 
     <div class="text-center">
         <a class="text-primary-600 hover:text-primary-700"
