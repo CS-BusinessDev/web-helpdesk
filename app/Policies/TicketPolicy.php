@@ -51,10 +51,13 @@ class TicketPolicy
     {
         if ($ticket->ticket_statuses_id == TicketStatus::RESOLVED || $ticket->ticket_statuses_id == TicketStatus::CLOSED) {
             return false;
-        } else {
-            return $this->view($user, $ticket);
         }
 
+        if ($user->id == $ticket->owner_id && $ticket->ticket_statuses_id != TicketStatus::OPEN){
+            return false;
+        }
+
+        return true;
     }
 
     /**

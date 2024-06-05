@@ -7,10 +7,13 @@ namespace App\Providers;
 use App\Models\User;
 use App\Policies\RolePolicy;
 use App\Policies\PermissionPolicy;
+use App\Policies\ActivityPolicy;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Spatie\Activitylog\Models\Activity;
+
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -22,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         Role::class => RolePolicy::class,
         Permission::class => PermissionPolicy::class,
+        Activity::class => ActivityPolicy::class,
     ];
 
     /**
