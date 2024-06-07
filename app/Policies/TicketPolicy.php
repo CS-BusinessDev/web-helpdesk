@@ -49,7 +49,7 @@ class TicketPolicy
      */
     public function update(User $user, Ticket $ticket): bool
     {
-        if ($ticket->ticket_statuses_id == TicketStatus::RESOLVED || $ticket->ticket_statuses_id == TicketStatus::CLOSED) {
+        if ($ticket->ticket_statuses_id == TicketStatus::CANCEL || $ticket->ticket_statuses_id == TicketStatus::CLOSED) {
             return false;
         }
 
