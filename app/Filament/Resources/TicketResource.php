@@ -114,12 +114,12 @@ class TicketResource extends Resource
                             ->pluck('name', 'id'))
                         ->searchable()
                         ->required()
-                        ->hiddenOn('create')
-                        ->hidden(
-                            fn () => !auth()
-                                ->user()
-                                ->hasAnyRole(['Super Admin', 'Admin Unit', 'Staff Unit']),
-                        ),
+                        ->hiddenOn('create'),
+                        // ->hidden(
+                        //     fn () => !auth()
+                        //         ->user()
+                        //         ->hasAnyRole(['Super Admin', 'Admin Unit', 'Staff Unit']),
+                        // ),
 
                     Forms\Components\Select::make('responsible_id')
                         ->label(__('Responsible'))

@@ -29,7 +29,16 @@ class TicketStatusesChart extends ApexChartWidget
      */
     protected function getOptions(): array
     {
-        $ticketStatuses = TicketStatus::select('id', 'name')->withCount(['tickets'])->get();
+        $user = auth()->user();
+        $ticketStatusesQuery = TicketStatus::select('id', 'name')
+            ->withCount(['tickets' => function ($query) use ($user) {
+                if (!$user->hasRole('Super Admin')) {
+                    $query->where('unit_id', $user->unit_id)
+                    ->orWhere('owner_id', $user->id);
+                }
+            }]);
+
+        $ticketStatuses = $ticketStatusesQuery->get();
         return [
             'chart' => [
                 'type' => 'pie',
