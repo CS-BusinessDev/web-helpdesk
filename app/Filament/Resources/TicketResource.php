@@ -155,10 +155,16 @@ class TicketResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->translateLabel()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('owner.name')
                     ->translateLabel()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('responsible.name')
+                    ->translateLabel()
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('problemCategory.name')
                     ->searchable()
                     ->label(__('Problem Category'))
@@ -168,15 +174,15 @@ class TicketResource extends Resource
                     ->sortable()
                     ->colors([
                         'secondary' => static fn ($state): bool => $state === 'Open',
-                        'warning' => static fn ($state): bool => $state === 'Assigned',
-                        'success' => static fn ($state): bool => $state === 'Resolved',
-                        'warning' => static fn ($state): bool => $state === 'Closed',
+                        'warning' => static fn ($state): bool => $state === 'In Progress',
+                        'danger' => static fn ($state): bool => $state === 'Cancel',
+                        'success' => static fn ($state): bool => $state === 'Closed',
                     ])
                     ->icons([
                         'heroicon-o-sparkles' => static fn ($state): bool => $state === 'Open',
-                        'heroicon-o-paper-airplane' => static fn ($state): bool => $state === 'Assigned',
-                        'heroicon-o-check' => static fn ($state): bool => $state === 'Resolved',
-                        'heroicon-o-x' => static fn ($state): bool => $state === 'Closed',
+                        'heroicon-o-paper-airplane' => static fn ($state): bool => $state === 'In Progress',
+                        'heroicon-o-x' => static fn ($state): bool => $state === 'Cancel',
+                        'heroicon-o-check' => static fn ($state): bool => $state === 'Closed',
                     ]),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
