@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewTicketNotification extends Notification
+class ClosedTicketNotification extends Notification
 {
     use Queueable;
 
@@ -28,7 +28,7 @@ class NewTicketNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     /**
@@ -37,8 +37,8 @@ class NewTicketNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                    ->subject('Terdapat tiket baru')
-                    ->line('Terdapat tiket baru yang perlu Anda periksa.')
+                    ->subject('Permintaan Tiket Anda Telah Ditangani')
+                    ->line('Kami ingin memberitahukan bahwa tiket yang Anda ajukan ('. $this->ticket->title .') telah selesai ditangani. Anda dapat melihat detailnya dengan mengklik tautan di bawah ini.')
                     ->action('Lihat Tiket', url('/admin/tickets/' . $this->ticket->id));
     }
 

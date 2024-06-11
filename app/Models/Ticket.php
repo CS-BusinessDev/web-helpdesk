@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
 use App\Notifications\NewTicketNotification;
+use App\Notifications\ClosedTicketNotification;
 
 /**
  * Class Ticket.
@@ -160,14 +161,18 @@ class Ticket extends Model
         static::saving(function ($ticket) {
             // Memeriksa apakah 'ticket_statuses_id' berubah
             if ($ticket->isDirty('ticket_statuses_id')) {
+                $receiver = User::find($ticket->owner_id);
                 // Jika 'ticket_statuses_id' berubah dan tidak sama dengan 1, serta 'approved_at' masih null, atur 'approved_at' dengan waktu saat ini
                 if ($ticket->ticket_statuses_id != 1 && is_null($ticket->approved_at)) {
                     $ticket->approved_at = Carbon::now();
                 }
 
-                // Jika 'ticket_statuses_id' bernilai 3 atau 4, atur 'solved_at' dengan waktu saat ini
-                if ($ticket->ticket_statuses_id == 3 || $ticket->ticket_statuses_id == 4) {
+                // Jika 'ticket_statuses_id' 4, atur 'solved_at' dengan waktu saat ini
+                if ($ticket->ticket_statuses_id == 4) {                    
                     $ticket->solved_at = Carbon::now();
+                    if ($receiver) {
+                        $receiver->notify(new ClosedTicketNotification($ticket));
+                    }
                 }
             }
         });
