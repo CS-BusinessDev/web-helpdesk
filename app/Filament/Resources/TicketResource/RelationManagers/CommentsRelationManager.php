@@ -75,13 +75,14 @@ class CommentsRelationManager extends RelationManager
                     ->after(function (Livewire $livewire) {
                         $ticket = $livewire->ownerRecord;
 
-                        if (auth()->user()->hasAnyRole(['Admin Unit', 'Staf Unit'])) {
+                        if (auth()->user()->hasAnyRole(['Super Admin', 'Admin Unit', 'Staf Unit'])) {
                             $receiver = $ticket->owner;
                         } else {
                             $receiver = User::whereHas(
                                 'roles',
                                 function ($q) {
-                                    $q->where('name', 'Admin Unit')
+                                    $q->where('name', 'Super Admin')
+                                        ->orWhere('name', 'Admin Unit')
                                         ->orWhere('name', 'Staf Unit');
                                 },
                             )->get();

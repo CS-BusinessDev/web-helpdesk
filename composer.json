@@ -21,6 +21,7 @@
         "laravel/tinker": "^2.8",
         "leandrocfe/filament-apex-charts": "^2.0",
         "owenvoke/blade-fontawesome": "^2.3",
+        "pusher/pusher-php-server": "*",
         "stechstudio/filament-impersonate": "^2.18",
         "z3d0x/filament-logger": "^0.5.6"
     },

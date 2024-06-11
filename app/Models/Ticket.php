@@ -5,12 +5,15 @@
  */
 
 namespace App\Models;
-
+use App\Filament\Resources\TicketResource;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Filament\Notifications\Notification;
+use Filament\Notifications\Actions\Action;
+use App\Notifications\NewTicketNotification;
 
 /**
  * Class Ticket.
@@ -181,6 +184,29 @@ class Ticket extends Model
                 'user_id' => Auth::id(),
                 'created_at' => now(),
             ]);
+
+
+            $receivers = User::whereHas('roles', function ($q) use ($ticket) {
+                $q->where(function($query) use ($ticket) {
+                    $query->where('name', 'Super Admin')
+                          ->orWhere(function($subQuery) use ($ticket) {
+                              $subQuery->whereIn('name', ['Admin Unit', 'Staf Unit'])
+                                       ->where('unit_id', $ticket->unit_id);
+                          });
+                });
+            })->where('is_active', 1)->get();
+
+            foreach ($receivers as $receiver) {
+                Notification::make()
+                    ->title('Terdapat tiket baru')
+                    ->actions([
+                        Action::make('Lihat')
+                            ->url(TicketResource::getUrl('view', ['record' => $ticket->id])),
+                    ])
+                    ->sendToDatabase($receiver);
+                    $receiver->notify(new NewTicketNotification($ticket));
+            }
+
         });
 
         // Menambahkan event listener untuk event 'updated' pada model
