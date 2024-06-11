@@ -165,8 +165,8 @@ class Ticket extends Model
                     $ticket->approved_at = Carbon::now();
                 }
 
-                // Jika 'ticket_statuses_id' bernilai 7 atau 8, atur 'solved_at' dengan waktu saat ini
-                if ($ticket->ticket_statuses_id == 7 || $ticket->ticket_statuses_id == 8) {
+                // Jika 'ticket_statuses_id' bernilai 3 atau 4, atur 'solved_at' dengan waktu saat ini
+                if ($ticket->ticket_statuses_id == 3 || $ticket->ticket_statuses_id == 4) {
                     $ticket->solved_at = Carbon::now();
                 }
             }
