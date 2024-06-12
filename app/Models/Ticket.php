@@ -161,7 +161,7 @@ class Ticket extends Model
      */
     public function businessEntity()
     {
-        return $this->hasMany(BusinessEntity::class, 'business_entities_id');
+        return $this->belongsTo(BusinessEntity::class, 'business_entities_id');
     }
 
 

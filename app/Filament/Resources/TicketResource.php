@@ -161,12 +161,20 @@ class TicketResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->translateLabel()
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('title')
                     ->translateLabel()
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('owner.name')
                     ->translateLabel()
+                    ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('businessEntity.name')
+                    ->label(__('Business Entity'))
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('responsible.name')

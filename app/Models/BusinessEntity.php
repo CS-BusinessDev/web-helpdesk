@@ -18,6 +18,6 @@ class BusinessEntity extends Model
 
     public function tickets()
     {
-        return $this->hasMany(Ticket::class, 'ticket_statuses_id');
+        return $this->hasMany(Ticket::class, 'business_entities_id');
     }
 }
