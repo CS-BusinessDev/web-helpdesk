@@ -9,6 +9,7 @@ use App\Models\Priority;
 use App\Models\ProblemCategory;
 use App\Models\Ticket;
 use App\Models\TicketStatus;
+use App\Models\BusinessEntity;
 use App\Models\Unit;
 use App\Models\User;
 use Filament\Forms;
@@ -104,6 +105,13 @@ class TicketResource extends Resource
                     Forms\Components\Select::make('priority_id')
                         ->label(__('Priority'))
                         ->options(Priority::all()
+                            ->pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+
+                    Forms\Components\Select::make('business_entities_id')
+                        ->label(__('Business Entity'))
+                        ->options(BusinessEntity::all()
                             ->pluck('name', 'id'))
                         ->searchable()
                         ->required(),

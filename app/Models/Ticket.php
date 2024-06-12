@@ -52,6 +52,7 @@ class Ticket extends Model
         'problem_category_id' => 'int',
         'ticket_statuses_id' => 'int',
         'responsible_id' => 'int',
+        'business_entities_id' => 'int',
         'approved_at' => 'datetime',
         'solved_at' => 'datetime',
     ];
@@ -65,6 +66,7 @@ class Ticket extends Model
         'description',
         'ticket_statuses_id',
         'responsible_id',
+        'business_entities_id',
         'approved_at',
         'solved_at',
     ];
@@ -142,7 +144,7 @@ class Ticket extends Model
         return $this->hasMany(Comment::class, 'tiket_id');
     }
 
-        /**
+    /**
      * Get the ticketHistories that owns the Ticket.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -150,6 +152,16 @@ class Ticket extends Model
     public function ticketHistories()
     {
         return $this->hasMany(TicketHistory::class, 'ticket_id');
+    }
+
+    /**
+     * Get the businessEntity that owns the Ticket.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function businessEntity()
+    {
+        return $this->hasMany(BusinessEntity::class, 'business_entities_id');
     }
 
 
