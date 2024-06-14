@@ -207,16 +207,55 @@ class TicketResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
+                // Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\SelectFilter::make('unit_id')
+                ->label(__('Work Unit'))
+                ->options(Unit::all()->pluck('name', 'id'))
+                ->hidden(
+                    fn () => !auth()
+                        ->user()
+                        ->hasAnyRole(['Super Admin']),
+                ),
+
+                // Tables\Filters\SelectFilter::make('problem_category_id')
+                //     ->label(__('Problem Category'))
+                //     ->options(function (callable $get) {
+                //         $unitId = $get('unit_id');
+                //         if ($unitId) {
+                //             return Unit::find($unitId)->problemCategories->pluck('name', 'id');
+                //         }
+                //         return ProblemCategory::all()->pluck('name', 'id');
+                //     })
+                //     ->searchable()
+                //     ->hidden(fn (callable $get) => !$get('unit_id')),
+
+                Tables\Filters\SelectFilter::make('ticket_statuses_id')
+                    ->label(__('Status'))
+                    ->options(TicketStatus::pluck('name', 'id')),
+                Tables\Filters\SelectFilter::make('business_entities_id')
+                    ->label(__('Business Entity'))
+                    ->options(BusinessEntity::pluck('name', 'id')),
+                Tables\Filters\SelectFilter::make('priority_id')
+                    ->label(__('Priority'))
+                    ->options(Priority::pluck('name', 'id')),
+                Tables\Filters\SelectFilter::make('priority_id')
+                    ->label(__('Priority'))
+                    ->options(Priority::pluck('name', 'id')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-                Tables\Actions\ForceDeleteBulkAction::make(),
-                Tables\Actions\RestoreBulkAction::make(),
+                // Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\ForceDeleteBulkAction::make()
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
+                // Tables\Actions\RestoreBulkAction::make(),
+                // ExportBulkAction::make()
             ])
             ->defaultSort('created_at', 'desc');
     }
