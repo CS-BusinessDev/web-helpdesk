@@ -51,7 +51,6 @@ class ProblemCategoryResource extends Resource
                     ->label(__('Work Unit')),
             ])
             ->filters([
-                 // Tables\Filters\TrashedFilter::make(),
                  Tables\Filters\SelectFilter::make('unit_id')
                  ->label(__('Work Unit'))
                  ->options(Unit::all()->pluck('name', 'id'))
@@ -60,15 +59,16 @@ class ProblemCategoryResource extends Resource
                          ->user()
                          ->hasAnyRole(['Super Admin']),
                  ),
+                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ForceDeleteBulkAction::make(),
-                // Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
             ]);
     }
 
