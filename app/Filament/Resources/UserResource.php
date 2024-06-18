@@ -74,7 +74,12 @@ class UserResource extends Resource
             ])
             ->actions([
                 Impersonate::make()
-                    ->redirectTo(route('filament.pages.dashboard')),
+                    ->redirectTo(route('filament.pages.dashboard'))
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
