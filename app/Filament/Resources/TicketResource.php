@@ -12,6 +12,7 @@ use App\Models\TicketStatus;
 use App\Models\BusinessEntity;
 use App\Models\Unit;
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Card;
 use Filament\Resources\Form;
@@ -209,14 +210,47 @@ class TicketResource extends Resource
                     ->toggleable(),
             ])
             ->filters([
+                Filter::make('created_at_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('start')
+                            ->label(__('Start Date'))
+                            ->closeOnDateSelection(),
+                        Forms\Components\DatePicker::make('end')
+                            ->label(__('End Date'))
+                            ->closeOnDateSelection(),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        // Jika tidak ada tanggal yang dipilih, jangan tambahkan kondisi kueri
+                        if (empty($data['start']) && empty($data['end'])) {
+                            return;
+                        }
+
+                        // Ambil awal hari dari tanggal awal
+                        $start = !empty($data['start']) ? Carbon::parse($data['start'])->startOfDay() : null;
+
+                        // Ambil akhir hari dari tanggal akhir
+                        $end = !empty($data['end']) ? Carbon::parse($data['end'])->endOfDay() : null;
+
+                        // Tentukan logika filter berdasarkan apakah tanggal awal dan/atau akhir diisi
+                        if ($start && $end) {
+                            // Jika kedua tanggal diisi, filter antara dua tanggal tersebut
+                            $query->whereBetween('created_at', [$start, $end]);
+                        } elseif ($start) {
+                            // Jika hanya tanggal awal diisi, filter dari tanggal awal ke masa kini
+                            $query->where('created_at', '>=', $start);
+                        } elseif ($end) {
+                            // Jika hanya tanggal akhir diisi, filter dari awal waktu hingga tanggal akhir
+                            $query->where('created_at', '<=', $end);
+                        }
+                    }),
                 Tables\Filters\SelectFilter::make('unit_id')
-                ->label(__('Work Unit'))
-                ->options(Unit::all()->pluck('name', 'id'))
-                ->hidden(
-                    fn () => !auth()
-                        ->user()
-                        ->hasAnyRole(['Super Admin']),
-                ),
+                    ->label(__('Work Unit'))
+                    ->options(Unit::all()->pluck('name', 'id'))
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
                 Tables\Filters\SelectFilter::make('ticket_statuses_id')
                     ->label(__('Status'))
                     ->options(TicketStatus::pluck('name', 'id')),
