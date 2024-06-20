@@ -15,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component as Livewire;
 
 class CommentsRelationManager extends RelationManager
@@ -37,6 +38,7 @@ class CommentsRelationManager extends RelationManager
                         ->required()
                         ->maxLength(255),
                     Forms\Components\FileUpload::make('attachments')
+                        ->disk('minio')
                         ->directory('comment-attachments/' . date('m-y'))
                         ->maxSize(2000)
                         ->enableDownload(),
@@ -99,7 +101,7 @@ class CommentsRelationManager extends RelationManager
             ])
             ->actions([
                 Tables\Actions\Action::make('attachment')->action(function ($record) {
-                    return response()->download('storage/' . $record->attachments);
+                    return Storage::disk('minio')->download($record->attachments);
                 })->hidden(fn ($record) => $record->attachments == ''),
                 Tables\Actions\EditAction::make(),
             ])
