@@ -80,6 +80,8 @@ class TicketResource extends Resource
                         ]),
 
                     Forms\Components\RichEditor::make('description')
+                        ->fileAttachmentsDisk('minio')
+                        ->fileAttachmentsDirectory('ticket-attachments/' . date('m-y'))
                         ->label(__('Description'))
                         ->required()
                         ->maxLength(65535)

@@ -40,7 +40,7 @@ class CommentsRelationManager extends RelationManager
                     Forms\Components\FileUpload::make('attachments')
                         ->disk('minio')
                         ->directory('comment-attachments/' . date('m-y'))
-                        ->maxSize(2000)
+                        ->maxSize(3000)
                         ->enableDownload(),
                 ])
             ]);
