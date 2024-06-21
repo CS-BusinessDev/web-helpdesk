@@ -147,6 +147,17 @@ class TicketResource extends Resource
                                 ->hasAnyRole(['Super Admin', 'Admin Unit']),
                         ),
 
+                    Forms\Components\Placeholder::make('owner')
+                        ->translateLabel()
+                        ->content(fn (
+                            ?Ticket $record,
+                        ): string => $record ? $record->owner->name : '-')
+                        ->hidden(
+                            fn () => !auth()
+                                ->user()
+                                ->hasAnyRole(['Super Admin', 'Admin Unit']),
+                        ),
+
                     Forms\Components\Placeholder::make('created_at')
                         ->translateLabel()
                         ->content(fn (
@@ -167,21 +178,19 @@ class TicketResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->translateLabel()
+                    ->label('ID')
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('title')
+                    ->limit(25)
                     ->translateLabel()
                     ->searchable()
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('owner.name')
-                    ->translateLabel()
-                    ->searchable()
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('businessEntity.name')
-                    ->label(__('Business Entity'))
-                    ->searchable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->description(
+                        fn (Ticket $record): string =>
+                        ($record->owner?->name ?: 'N/A') . ' - ' . ($record->businessEntity?->name ?: 'N/A'),
+                        position: 'below'
+                    ),
                 Tables\Columns\TextColumn::make('responsible.name')
                     ->translateLabel()
                     ->searchable()
@@ -189,6 +198,7 @@ class TicketResource extends Resource
                 Tables\Columns\TextColumn::make('problemCategory.name')
                     ->searchable()
                     ->label(__('Problem Category'))
+                    ->limit(20)
                     ->toggleable(),
                 Tables\Columns\BadgeColumn::make('ticketStatus.name')
                     ->label(__('Status'))
@@ -206,10 +216,10 @@ class TicketResource extends Resource
                         'heroicon-o-check' => static fn ($state): bool => $state === 'Closed',
                     ]),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->dateTime('F j, Y')
                     ->translateLabel()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(true),
             ])
             ->filters([
                 Filter::make('created_at_range')
@@ -314,7 +324,6 @@ class TicketResource extends Resource
                 if (auth()->user()->hasRole('Super Admin')) {
                     return;
                 }
-
                 if (auth()->user()->hasRole('Admin Unit')) {
                     $query->where('tickets.unit_id', auth()->user()->unit_id)->orWhere('tickets.owner_id', auth()->id());
                 } elseif (auth()->user()->hasRole('Staff Unit')) {
@@ -326,6 +335,17 @@ class TicketResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    protected static function getNavigationBadge(): ?string
+    {
+        if (auth()->user()->hasRole(['Super Admin', 'Admin Unit'])) {
+            return Ticket::where('ticket_statuses_id', 1)
+            ->where('unit_id', auth()->user()->unit_id)
+            ->count();;
+        }
+
+        return false;
     }
 
     public static function getPluralModelLabel(): string
