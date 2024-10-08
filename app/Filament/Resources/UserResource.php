@@ -62,25 +62,31 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email'),
                 Tables\Columns\TagsColumn::make('roles.name'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Impersonate::make()
-                    ->redirectTo(route('filament.pages.dashboard')),
+                    ->redirectTo(route('filament.pages.dashboard'))
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ForceDeleteBulkAction::make(),
-                // Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
             ])
         ;
     }

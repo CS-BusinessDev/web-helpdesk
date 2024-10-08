@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\SocialiteUser;
 use App\Models\User;
+use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -56,6 +57,7 @@ class SocialiteController extends Controller
                 'email' => $socialUser->getEmail(),
                 'email_verified_at' => Carbon::now()->timestamp,
             ]);
+            $user->assignRole('User');
         }
 
         // Buat a new socialite user
