@@ -8,7 +8,11 @@ return [
     |--------------------------------------------------------------------------
     */
 
+<<<<<<< HEAD
+    'nav.group' => 'Pengaturan',
+=======
     'nav.group' => 'Developer',
+>>>>>>> 35cee3f82beca65faa35ab351423668e9773eef2
     'nav.log.label' => 'Catatan Aktivitas',
     'nav.log.icon' => 'heroicon-o-clipboard-list',
     'resource.label.log' => 'Catatan aktivitas',
