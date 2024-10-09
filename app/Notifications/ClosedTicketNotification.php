@@ -75,7 +75,7 @@ class ClosedTicketNotification extends Notification
 
         // Format pesan WhatsApp
         $message = "🔔 *Notifikasi Penutupan Tiket* 🔔\n\n";
-        $message .= "Halo *" . $notifiable->name . "*,, kami ingin memberitahukan bahwa tiket yang Anda ajukan telah selesai ditangani.\n\n";
+        $message .= "Halo *" . $notifiable->name . "*, kami ingin memberitahukan bahwa tiket yang Anda ajukan telah selesai ditangani.\n\n";
         $message .= "📝 ID Tiket: *" . $this->ticket->id . "*\n";
         $message .= "📌 Subjek: *" . $this->ticket->title . "*\n";
         $message .= "📅 Tanggal Ditutup: *" . now()->format('d M Y H:i') . "*\n"; // Menggunakan waktu saat ini untuk tanggal penutupan

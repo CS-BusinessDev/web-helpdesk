@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use STS\FilamentImpersonate\Tables\Actions\Impersonate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserResource extends Resource
 {
@@ -49,12 +50,15 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
+                    ->unique()
                     ->maxLength(15)
                     ->minLength(10)
-                    ->beforeStateDehydrated(function ($state, callable $set) {
+                    ->dehydrateStateUsing(function ($state) {
+                        // Jika nomor dimulai dengan '0', ganti dengan '62'
                         if (substr($state, 0, 1) === '0') {
-                            $set('phone', '62' . substr($state, 1)); // Ganti angka 0 di awal dengan 62
+                            return '62' . substr($state, 1); // Transformasi nomor di sini
                         }
+                        return $state; // Kembalikan nomor telepon yang sudah diubah
                     }),
                 Forms\Components\Toggle::make('is_active')
                     ->required(),

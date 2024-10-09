@@ -26,6 +26,7 @@ class MyProfile extends BaseProfile
                 ->tel()
                 ->minLength(10)
                 ->maxLength(15)
+                ->unique()
                 ->label(__('Nomer WA'))
                 ->beforeStateDehydrated(function ($state, callable $set) {
                     if (substr($state, 0, 1) === '0') {
