@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use STS\FilamentImpersonate\Tables\Actions\Impersonate;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserResource extends Resource
 {
@@ -47,11 +48,18 @@ class UserResource extends Resource
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('identity')
-                    ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
-                    ->maxLength(255),
+                    ->unique()
+                    ->maxLength(15)
+                    ->minLength(10)
+                    ->dehydrateStateUsing(function ($state) {
+                        // Jika nomor dimulai dengan '0', ganti dengan '62'
+                        if (substr($state, 0, 1) === '0') {
+                            return '62' . substr($state, 1); // Transformasi nomor di sini
+                        }
+                        return $state; // Kembalikan nomor telepon yang sudah diubah
+                    }),
                 Forms\Components\Toggle::make('is_active')
                     ->required(),
             ])
@@ -62,25 +70,31 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name'),
+                Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email'),
                 Tables\Columns\TagsColumn::make('roles.name'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Impersonate::make()
-                    ->redirectTo(route('filament.pages.dashboard')),
+                    ->redirectTo(route('filament.pages.dashboard'))
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
                 Tables\Actions\ForceDeleteBulkAction::make(),
-                // Tables\Actions\RestoreBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
             ])
         ;
     }

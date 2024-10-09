@@ -12,14 +12,17 @@ use App\Models\TicketStatus;
 use App\Models\BusinessEntity;
 use App\Models\Unit;
 use App\Models\User;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Card;
 use Filament\Resources\Form;
 use Filament\Resources\Resource;
 use Filament\Resources\Table;
 use Filament\Tables;
+use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\FilterGroup;
 
 class TicketResource extends Resource
 {
@@ -77,6 +80,8 @@ class TicketResource extends Resource
                         ]),
 
                     Forms\Components\RichEditor::make('description')
+                        ->fileAttachmentsDisk('minio')
+                        ->fileAttachmentsDirectory('ticket-attachments/' . date('m-y'))
                         ->label(__('Description'))
                         ->required()
                         ->maxLength(65535)
@@ -142,6 +147,17 @@ class TicketResource extends Resource
                                 ->hasAnyRole(['Super Admin', 'Admin Unit']),
                         ),
 
+                    Forms\Components\Placeholder::make('owner')
+                        ->translateLabel()
+                        ->content(fn (
+                            ?Ticket $record,
+                        ): string => $record ? $record->owner->name : '-')
+                        ->hidden(
+                            fn () => !auth()
+                                ->user()
+                                ->hasAnyRole(['Super Admin', 'Admin Unit']),
+                        ),
+
                     Forms\Components\Placeholder::make('created_at')
                         ->translateLabel()
                         ->content(fn (
@@ -162,21 +178,19 @@ class TicketResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->translateLabel()
+                    ->label('ID')
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('title')
+                    ->limit(25)
                     ->translateLabel()
                     ->searchable()
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('owner.name')
-                    ->translateLabel()
-                    ->searchable()
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('businessEntity.name')
-                    ->label(__('Business Entity'))
-                    ->searchable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->description(
+                        fn (Ticket $record): string =>
+                        ($record->owner?->name ?: 'N/A') . ' - ' . ($record->businessEntity?->name ?: 'N/A'),
+                        position: 'below'
+                    ),
                 Tables\Columns\TextColumn::make('responsible.name')
                     ->translateLabel()
                     ->searchable()
@@ -184,6 +198,7 @@ class TicketResource extends Resource
                 Tables\Columns\TextColumn::make('problemCategory.name')
                     ->searchable()
                     ->label(__('Problem Category'))
+                    ->limit(20)
                     ->toggleable(),
                 Tables\Columns\BadgeColumn::make('ticketStatus.name')
                     ->label(__('Status'))
@@ -201,34 +216,53 @@ class TicketResource extends Resource
                         'heroicon-o-check' => static fn ($state): bool => $state === 'Closed',
                     ]),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->dateTime('F j, Y')
                     ->translateLabel()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(true),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
+                Filter::make('created_at_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('start')
+                            ->label(__('Start Date'))
+                            ->closeOnDateSelection(),
+                        Forms\Components\DatePicker::make('end')
+                            ->label(__('End Date'))
+                            ->closeOnDateSelection(),
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        // Jika tidak ada tanggal yang dipilih, jangan tambahkan kondisi kueri
+                        if (empty($data['start']) && empty($data['end'])) {
+                            return;
+                        }
+
+                        // Ambil awal hari dari tanggal awal
+                        $start = !empty($data['start']) ? Carbon::parse($data['start'])->startOfDay() : null;
+
+                        // Ambil akhir hari dari tanggal akhir
+                        $end = !empty($data['end']) ? Carbon::parse($data['end'])->endOfDay() : null;
+
+                        // Tentukan logika filter berdasarkan apakah tanggal awal dan/atau akhir diisi
+                        if ($start && $end) {
+                            // Jika kedua tanggal diisi, filter antara dua tanggal tersebut
+                            $query->whereBetween('created_at', [$start, $end]);
+                        } elseif ($start) {
+                            // Jika hanya tanggal awal diisi, filter dari tanggal awal ke masa kini
+                            $query->where('created_at', '>=', $start);
+                        } elseif ($end) {
+                            // Jika hanya tanggal akhir diisi, filter dari awal waktu hingga tanggal akhir
+                            $query->where('created_at', '<=', $end);
+                        }
+                    }),
                 Tables\Filters\SelectFilter::make('unit_id')
-                ->label(__('Work Unit'))
-                ->options(Unit::all()->pluck('name', 'id'))
-                ->hidden(
-                    fn () => !auth()
-                        ->user()
-                        ->hasAnyRole(['Super Admin']),
-                ),
-
-                // Tables\Filters\SelectFilter::make('problem_category_id')
-                //     ->label(__('Problem Category'))
-                //     ->options(function (callable $get) {
-                //         $unitId = $get('unit_id');
-                //         if ($unitId) {
-                //             return Unit::find($unitId)->problemCategories->pluck('name', 'id');
-                //         }
-                //         return ProblemCategory::all()->pluck('name', 'id');
-                //     })
-                //     ->searchable()
-                //     ->hidden(fn (callable $get) => !$get('unit_id')),
-
+                    ->label(__('Work Unit'))
+                    ->options(Unit::all()->pluck('name', 'id'))
+                    ->hidden(
+                        fn () => !auth()
+                            ->user()
+                            ->hasAnyRole(['Super Admin']),
+                    ),
                 Tables\Filters\SelectFilter::make('ticket_statuses_id')
                     ->label(__('Status'))
                     ->options(TicketStatus::pluck('name', 'id')),
@@ -241,21 +275,17 @@ class TicketResource extends Resource
                 Tables\Filters\SelectFilter::make('priority_id')
                     ->label(__('Priority'))
                     ->options(Priority::pluck('name', 'id')),
+                Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\ForceDeleteAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\DeleteBulkAction::make(),
-                Tables\Actions\ForceDeleteBulkAction::make()
-                    ->hidden(
-                        fn () => !auth()
-                            ->user()
-                            ->hasAnyRole(['Super Admin']),
-                    ),
-                // Tables\Actions\RestoreBulkAction::make(),
-                // ExportBulkAction::make()
+                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\ForceDeleteBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -294,7 +324,6 @@ class TicketResource extends Resource
                 if (auth()->user()->hasRole('Super Admin')) {
                     return;
                 }
-
                 if (auth()->user()->hasRole('Admin Unit')) {
                     $query->where('tickets.unit_id', auth()->user()->unit_id)->orWhere('tickets.owner_id', auth()->id());
                 } elseif (auth()->user()->hasRole('Staff Unit')) {
@@ -306,6 +335,17 @@ class TicketResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    protected static function getNavigationBadge(): ?string
+    {
+        if (auth()->user()->hasRole(['Super Admin', 'Admin Unit'])) {
+            return Ticket::where('ticket_statuses_id', 1)
+            ->where('unit_id', auth()->user()->unit_id)
+            ->count();;
+        }
+
+        return false;
     }
 
     public static function getPluralModelLabel(): string
