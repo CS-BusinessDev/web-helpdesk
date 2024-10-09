@@ -47,11 +47,15 @@ class UserResource extends Resource
                     ->dehydrated(fn ($state) => filled($state))
                     ->required(fn (string $context): bool => $context === 'create')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('identity')
-                    ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
-                    ->maxLength(255),
+                    ->maxLength(15)
+                    ->minLength(10)
+                    ->beforeStateDehydrated(function ($state, callable $set) {
+                        if (substr($state, 0, 1) === '0') {
+                            $set('phone', '62' . substr($state, 1)); // Ganti angka 0 di awal dengan 62
+                        }
+                    }),
                 Forms\Components\Toggle::make('is_active')
                     ->required(),
             ])
