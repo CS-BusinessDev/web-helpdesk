@@ -35,8 +35,7 @@ class CommentsRelationManager extends RelationManager
             ->schema([
                 Card::make()->schema([
                     Forms\Components\RichEditor::make('comment')
-                        ->required()
-                        ->maxLength(255),
+                        ->required(),
                     Forms\Components\FileUpload::make('attachments')
                         ->disk('minio')
                         ->directory('comment-attachments/' . date('m-y'))
