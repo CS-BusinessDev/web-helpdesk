@@ -21,7 +21,7 @@ class ViewTicket extends ViewRecord
 
         // Check user roles
         if (($user->hasRole('Admin Unit')) || $user->hasRole('Super Admin')) {
-            if ($record->ticket_statuses_id == 1 && $record->responsible_id === null) {
+            if ($record->ticket_statuses_id == 1 && ($record->responsible_id === null || $record->responsible_id == Auth::id())) {
                 $actions[] = Actions\Action::make('cancel')
                     ->label('Cancel')
                     ->color('danger')
