@@ -168,19 +168,17 @@ class Ticket extends Model
     protected static function boot()
     {
         parent::boot();
-
-        // Menambahkan event listener untuk event 'saving' pada model
+    
+        // Event listener untuk event 'saving'
         static::saving(function ($ticket) {
-            // Memeriksa apakah 'ticket_statuses_id' berubah
             if ($ticket->isDirty('ticket_statuses_id')) {
                 $receiver = User::find($ticket->owner_id);
-                // Jika 'ticket_statuses_id' berubah dan tidak sama dengan 1, serta 'approved_at' masih null, atur 'approved_at' dengan waktu saat ini
+    
                 if ($ticket->ticket_statuses_id != 1 && is_null($ticket->approved_at)) {
                     $ticket->approved_at = Carbon::now();
                 }
-
-                // Jika 'ticket_statuses_id' 4, atur 'solved_at' dengan waktu saat ini
-                if ($ticket->ticket_statuses_id == 4) {                    
+    
+                if ($ticket->ticket_statuses_id == 4) {
                     $ticket->solved_at = Carbon::now();
                     if ($receiver) {
                         $receiver->notify(new ClosedTicketNotification($ticket));
@@ -188,45 +186,61 @@ class Ticket extends Model
                 }
             }
         });
-
-        // Menambahkan event listener untuk event 'created' pada model
+    
+        // Event listener untuk event 'created'
         static::created(function ($ticket) {
             if (self::$isSeeding) {
                 return;
             }
-
+    
+            // Membuat riwayat tiket baru
             TicketHistory::create([
                 'ticket_id' => $ticket->id,
                 'ticket_statuses_id' => $ticket->ticket_statuses_id,
                 'user_id' => Auth::id(),
                 'created_at' => now(),
             ]);
-
-
-            $receivers = User::whereHas('roles', function ($q) use ($ticket) {
-                $q->where(function($query) use ($ticket) {
-                    $query->where('name', 'Super Admin')
-                          ->orWhere(function($subQuery) use ($ticket) {
-                              $subQuery->whereIn('name', ['Admin Unit', 'Staf Unit'])
-                                       ->where('unit_id', $ticket->unit_id);
-                          });
-                });
-            })->where('is_active', 1)->get();
-
-            foreach ($receivers as $receiver) {
-                Notification::make()
-                    ->title('Terdapat tiket baru')
-                    ->actions([
-                        Action::make('Lihat')
-                            ->url(TicketResource::getUrl('view', ['record' => $ticket->id])),
-                    ])
-                    ->sendToDatabase($receiver);
+    
+            // Logika untuk mengirim notifikasi berdasarkan responsible_id
+            if ($ticket->responsible_id) {
+                // Jika responsible_id ada, kirim ke user tersebut
+                $receiver = User::find($ticket->responsible_id);
+                if ($receiver) {
+                    Notification::make()
+                        ->title('Terdapat tiket baru yang menjadi tanggung jawab Anda')
+                        ->actions([
+                            Action::make('Lihat')
+                                ->url(TicketResource::getUrl('view', ['record' => $ticket->id])),
+                        ])
+                        ->sendToDatabase($receiver);
                     $receiver->notify(new NewTicketNotification($ticket));
+                }
+            } else {
+                // Jika responsible_id tidak ada, kirim ke semua user dengan unit kerja terkait
+                $receivers = User::whereHas('roles', function ($q) use ($ticket) {
+                    $q->where(function ($query) use ($ticket) {
+                        $query->where('name', 'Super Admin')
+                              ->orWhere(function ($subQuery) use ($ticket) {
+                                  $subQuery->whereIn('name', ['Admin Unit', 'Staf Unit'])
+                                           ->where('unit_id', $ticket->unit_id);
+                              });
+                    });
+                })->where('is_active', 1)->get();
+    
+                foreach ($receivers as $receiver) {
+                    Notification::make()
+                        ->title('Terdapat tiket baru')
+                        ->actions([
+                            Action::make('Lihat')
+                                ->url(TicketResource::getUrl('view', ['record' => $ticket->id])),
+                        ])
+                        ->sendToDatabase($receiver);
+                    $receiver->notify(new NewTicketNotification($ticket));
+                }
             }
-
         });
-
-        // Menambahkan event listener untuk event 'updated' pada model
+    
+        // Event listener untuk event 'updated'
         static::updated(function ($ticket) {
             TicketHistory::create([
                 'ticket_id' => $ticket->id,
@@ -236,4 +250,5 @@ class Ticket extends Model
             ]);
         });
     }
+    
 }
