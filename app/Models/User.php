@@ -77,14 +77,35 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     ];
 
     /**
+     * Mendapatkan semua entitas yang terkait dengan pengguna.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     */
+    public function entities()
+    {
+        return $this->morphMany(UserEntity::class, 'entity');
+    }
+
+    /**
+     * Mendapatkan semua unit yang terkait dengan pengguna.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function units()
+    {
+        return $this->morphedByMany(Unit::class, 'entity', 'user_entities');
+    }
+
+
+    /**
      * Get the unit that owns the User.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
+    // public function unit()
+    // {
+    //     return $this->belongsTo(Unit::class);
+    // }
 
     /**
      * Get all of the comments for the User.
@@ -134,7 +155,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function scopeByRole($query)
     {
         if (auth()->user()->hasRole('Admin Unit')) {
-            return $query->where('users.unit_id', auth()->user()->unit_id);
+            return $query->whereHas('units', function ($q) {
+                $q->whereIn('id', auth()->user()->units->pluck('id'));
+            });
         }
     }
 

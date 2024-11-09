@@ -30,9 +30,9 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('unit_id')
-                    ->options(Unit::all()
-                        ->pluck('name', 'id'))
+                Forms\Components\MultiSelect::make('units')
+                    ->relationship('units', 'name') // Menggunakan relasi 'units' dengan mengambil 'name' dari Unit
+                    ->options(Unit::all()->pluck('name', 'id'))
                     ->searchable(),
                 Forms\Components\TextInput::make('name')
                     ->required()
@@ -50,7 +50,7 @@ class UserResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('phone')
                     ->tel()
-                    ->unique()
+                    // ->unique()
                     ->maxLength(15)
                     ->minLength(10)
                     ->dehydrateStateUsing(function ($state) {
@@ -74,6 +74,7 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email'),
                 Tables\Columns\TagsColumn::make('roles.name'),
+                Tables\Columns\TagsColumn::make('units.name'),
                 Tables\Columns\IconColumn::make('is_active')
                     ->boolean(),
             ])

@@ -51,12 +51,12 @@ class Unit extends Model
     }
 
     /**
-     * Get all of the users for the Unit
+     * Mendapatkan semua pengguna yang terkait dengan unit melalui user entities.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->morphToMany(User::class, 'entity', 'user_entities');
     }
 }

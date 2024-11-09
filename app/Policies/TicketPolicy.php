@@ -33,7 +33,7 @@ class TicketPolicy
     {
         // The admin unit can view tickets that are assigned to their specific unit.
         if ($user->hasRole('Admin Unit')) {
-            return $user->id == $ticket->owner_id || $ticket->unit_id == $user->unit_id;
+            return $user->id == $ticket->owner_id || $user->units->pluck('id')->contains($ticket->unit_id);
         }
 
         // The staff unit can view tickets that have been assigned to them.

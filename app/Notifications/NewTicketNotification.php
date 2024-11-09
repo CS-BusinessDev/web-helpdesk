@@ -76,6 +76,11 @@ class NewTicketNotification extends Notification
         // Dapatkan endpoint dari .env
         $apiEndpoint = env('WHATSAPP_API_ENDPOINT');
 
+        if (empty($apiEndpoint)) {
+            \Log::error('WHATSAPP_API_ENDPOINT tidak diatur di file .env');
+            return;
+        }
+
         // Format pesan WhatsApp
         $message = "🔔 *Notifikasi Tiket Baru* 🔔\n\n";
         $message .= "Halo *" . $notifiable->name . "*, terdapat tiket baru yang perlu Anda periksa.\n\n";

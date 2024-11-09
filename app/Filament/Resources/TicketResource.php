@@ -320,22 +320,28 @@ class TicketResource extends Resource
     {
         return parent::getEloquentQuery()
             ->where(function ($query) {
+                $user = auth()->user();
+
                 // Display all tickets to Super Admin
-                if (auth()->user()->hasRole('Super Admin')) {
+                if ($user->hasRole('Super Admin')) {
                     return;
                 }
-                if (auth()->user()->hasRole('Admin Unit')) {
-                    $query->where('tickets.unit_id', auth()->user()->unit_id)->orWhere('tickets.owner_id', auth()->id());
-                } elseif (auth()->user()->hasRole('Staff Unit')) {
-                    $query->where('tickets.responsible_id', auth()->id())->orWhere('tickets.owner_id', auth()->id());
+
+                if ($user->hasRole('Admin Unit')) {
+                    // Admin Unit: view tickets they own or within their units
+                    $query->where('tickets.owner_id', $user->id)
+                        ->orWhereIn('tickets.unit_id', $user->units->pluck('id'));
+                } elseif ($user->hasRole('Staff Unit')) {
+                    // Staff Unit: view tickets assigned to them or that they own
+                    $query->whereIn('tickets.owner_id', [$user->id, 'tickets.responsible_id']);
                 } else {
-                    $query->where('tickets.owner_id', auth()->id());
+                    // Default: only view tickets owned by the user
+                    $query->where('tickets.owner_id', $user->id);
                 }
             })
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+            ->withoutGlobalScopes([SoftDeletingScope::class]);
     }
+
 
     protected static function getNavigationBadge(): ?string
     {
