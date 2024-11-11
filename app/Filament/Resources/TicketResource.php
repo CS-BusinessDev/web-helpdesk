@@ -136,8 +136,9 @@ class TicketResource extends Resource
 
                     Forms\Components\Select::make('responsible_id')
                         ->label(__('Responsible'))
-                        ->options(User::ByRole()
-                            ->pluck('name', 'id'))
+                        ->options(
+                            User::pluck('name', 'id')->toArray() // Mengambil nama pengguna dan id
+                        )
                         ->searchable()
                         ->required()
                         ->hiddenOn('create')
